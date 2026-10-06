@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baling Press Monitoring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #14181F;
+    --panel: #1C222C;
+    --panel-raised: #232B37;
+    --border: #2E3644;
+    --text: #E7EAEE;
+    --text-muted: #8B94A3;
+    --accent: #E8A33D;
+    --accent-dim: #6B5427;
+    --good: #4CAF7D;
+    --font-ui: 'IBM Plex Sans', sans-serif;
+    --font-data: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+  }
+
+  .plant-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .plant-mark .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px 1px var(--accent);
+  }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 13.5px;
+    margin-top: 4px;
+  }
+
+  .refresh-note {
+    font-family: var(--font-data);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  /* --- Stats toggle --- */
+  .stats-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease;
+    margin-bottom: 20px;
+  }
+
+  .stats-toggle:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .stats-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .stats-panel {
+    display: none;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .stats-panel.open {
+    display: grid;
+  }
+
+  .stat-cell {
+    background: var(--panel-raised);
+    padding: 20px 22px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-data);
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .stat-value .unit {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-left: 4px;
+  }
+
+  /* --- Table section --- */
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .table-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #1B1607;
+    border: none;
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 13.5px;
+    padding: 9px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: filter 0.15s ease;
+  }
+
+  .download-btn:hover { filter: brightness(1.08); }
+  .download-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-data);
+    font-size: 13.5px;
+  }
+
+  thead th {
+    text-align: left;
+    background: var(--panel-raised);
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-ui);
+  }
+
+  thead th.num { text-align: right; }
+
+  tbody td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--panel-raised); }
+
+  td.num, th.num { text-align: right; }
+  td.sno { color: var(--text-muted); }
+  td.weight { color: var(--good); font-weight: 500; }
+
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .empty-state .big {
+    font-size: 15px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  footer {
+    margin-top: 28px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .page { padding: 32px 16px 60px; }
+    header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .refresh-note { text-align: left; }
+    .stats-panel { grid-template-columns: 1fr; }
+    .table-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <header>
+      <div>
+        <div class="plant-mark">
+          <span class="dot"></span>
+          <h1>Baling Press Monitoring</h1>
+        </div>
+        <div class="subtitle">Live bale weight log</div>
+      </div>
+      <div class="refresh-note">Loaded {{ stats.total_bales }} records</div>
+    </header>
+
+    <button class="stats-toggle" id="statsToggle" aria-expanded="false" aria-controls="statsPanel">
+      Show production statistics
+    </button>
+
+    <div class="stats-panel" id="statsPanel">
+      <div class="stat-cell">
+        <div class="stat-label">Total bales logged</div>
+        <div class="stat-value">{{ stats.total_bales }}</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Average per day</div>
+        <div class="stat-value">{{ stats.avg_per_day }}<span class="unit">bales/day</span></div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Average per active hour</div>
+        <div class="stat-value">{{ stats.avg_per_hour }}<span class="unit">bales/hr</span></div>
+      </div>
+    </div>
+
+    <div class="table-header">
+      <h2>All Readings</h2>
+      <a class="download-btn" href="/download-excel">Download as Excel</a>
+    </div>
+
+    <div class="table-wrap">
+      {% if table|length > 0 %}
+      <table>
+        <thead>
+          <tr>
+            <th class="num">S.No</th>
+            <th>Time</th>
+            <th>Day</th>
+            <th class="num">Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in table %}
+          <tr>
+            <td class="sno num">{{ row.sno }}</td>
+            <td>{{ row.time }}</td>
+            <td>{{ row.day }}</td>
+            <td class="weight num">{{ row.weight }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <div class="big">No readings yet</div>
+        <div>Once the device starts sending data, it will show up here.</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <footer>Data source: Firebase Realtime Database — balingpress-monitoring</footer>
+
+  </div>
+
+  <script>
+    const toggle = document.getElementById('statsToggle');
+    const panel = document.getElementById('statsPanel');
+    toggle.addEventListener('click', () => {
+      const isOpen = panel.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', isOpen);
+      toggle.textContent = isOpen ? 'Hide production statistics' : 'Show production statistics';
+    });
+  </script>
+</body>
+</html>
